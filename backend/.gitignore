@@ -1,0 +1,21 @@
+# Secrets
+config/master.key
+config/credentials/*.key
+config/credentials/*.yml.enc
+
+# Logs
+log/*.log
+
+# Temp files
+tmp/
+storage/
+
+# Dependencies (dev só, prod usa bundle path)
+vendor/bundle
+
+# Test artifacts
+coverage/
+spec/vcr_cassettes/*.yml
+
+# OS
+.DS_Store

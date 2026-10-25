@@ -1,0 +1,105 @@
+services:
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+    networks:
+      - chatia
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      DEVISE_JWT_SECRET_KEY: ${DEVISE_JWT_SECRET_KEY}
+      ABACUS_API_KEY: ${ABACUS_API_KEY}
+      ABACUS_API_URL: ${ABACUS_API_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SENTRY_DSN: ${SENTRY_DSN}
+      RAILS_LOG_TO_STDOUT: "true"
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+    volumes:
+      - backend_storage:/rails/storage
+    depends_on:
+      - redis
+    networks:
+      - chatia
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  sidekiq:
+    build:
+      context: ./backend
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      DEVISE_JWT_SECRET_KEY: ${DEVISE_JWT_SECRET_KEY}
+      ABACUS_API_KEY: ${ABACUS_API_KEY}
+      ABACUS_API_URL: ${ABACUS_API_URL}
+      SENTRY_DSN: ${SENTRY_DSN}
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+    volumes:
+      - backend_storage:/rails/storage
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - chatia
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - chatia
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - chatia
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_URL}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - chatia
+    restart: unless-stopped
+
+volumes:
+  backend_storage:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  chatia:
+    driver: bridge

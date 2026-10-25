@@ -1,0 +1,32 @@
+# Secrets
+.env
+backend/config/master.key
+backend/config/credentials/*.key
+nginx/certs/*.pem
+nginx/certs/*.crt
+nginx/certs/*.key
+
+# Logs
+backend/log/*.log
+*.log
+
+# Dependencies
+backend/vendor/bundle
+frontend/node_modules
+
+# Build artifacts
+frontend/dist
+
+# Test artifacts
+backend/coverage/
+backend/spec/vcr_cassettes/*.yml
+frontend/coverage/
+
+# Docker volumes (local)
+.docker-data/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,44 @@
+rules:
+  - id: no-raw-sql-interpolation
+    patterns:
+      - pattern: |
+          $MODEL.where("... #{...} ...")
+      - pattern: |
+          $MODEL.order("#{...}")
+      - pattern: |
+          ActiveRecord::Base.connection.execute("... #{...} ...")
+    message: "SQL string interpolation detected. Use parameterized queries instead."
+    languages: [ruby]
+    severity: ERROR
+
+  - id: no-dangerously-set-inner-html
+    pattern: dangerouslySetInnerHTML
+    message: "dangerouslySetInnerHTML is forbidden. Use react-markdown without rehype-raw."
+    languages: [typescript, javascript]
+    severity: ERROR
+
+  - id: no-hardcoded-api-keys
+    patterns:
+      - pattern: |
+          $VAR = "sk-..."
+      - pattern: |
+          api_key: "..."
+    message: "Possible hardcoded API key. Use environment variables."
+    languages: [ruby, typescript, javascript]
+    severity: ERROR
+
+  - id: no-any-typescript
+    pattern: ": any"
+    message: "TypeScript 'any' type is forbidden. Use proper types."
+    languages: [typescript]
+    severity: WARNING
+
+  - id: log-no-sensitive-content
+    patterns:
+      - pattern: |
+          Rails.logger.$METHOD($MSG.content)
+      - pattern: |
+          Rails.logger.$METHOD($MSG.encrypted_password)
+    message: "Logging sensitive content is forbidden."
+    languages: [ruby]
+    severity: ERROR
